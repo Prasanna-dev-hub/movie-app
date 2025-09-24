@@ -3,6 +3,7 @@ import { useDebounce } from 'react-use';
 import Search from "./components/Search.jsx";
 import Spinner from "./components/Spinner.jsx";
 import MovieCard from "./components/MovieCard.jsx";
+import LanguageFilter from "./components/LanguageFilter.jsx";
 
 const API_BASE_URL = 'https://api.themoviedb.org/3';
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
@@ -21,6 +22,7 @@ function App() {
     const [movieList, setMovieList] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [debounceSearchTerm, setDebounceSearchTerm] = useState('');
+    const [selectedLanguage, setSelectedLanguage] = useState('');
 
     // Debounce the search term to prevent making too many API requests by waiting by 500ms
     useDebounce(() => setDebounceSearchTerm(searchTerm), 500, [searchTerm])
@@ -59,6 +61,8 @@ function App() {
         fetchMovies(debounceSearchTerm);
     }, [debounceSearchTerm])
 
+    const filteredMovies = movieList.filter(movie => !selectedLanguage || movie.original_language === selectedLanguage);
+
   return (
     <main>
         <div className="pattern">
@@ -67,21 +71,29 @@ function App() {
                     <img src="./hero-img.png" alt="hero-img" />
                     <h1>Find <span className="text-gradient">Movies</span> You'll Enjoy Without the Hassle</h1>
                     <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+                    <LanguageFilter   
+                            movieList={movieList}
+                            selectedLanguage={selectedLanguage}
+                            setSelectedLanguage={setSelectedLanguage} 
+                    />
                 </header>
 
                 <section className="all-movies p-[40px]">
                     <h2 className="mt-[40px]"> All Movies </h2>
                     {isLoading ? (
                         <Spinner />
-                    ) : errorMessage ? (
+                        ) : errorMessage ? (
                         <p className="text-red-500">{errorMessage}</p>
-                    ) : (
+                        ) : movieList.length === 0 ? (
+                        <p className="text-yellow-500">No movies found</p>
+                        ) : filteredMovies.length === 0 ? (
+                        <p className="text-yellow-500">No movies found for selected language</p>
+                        ) : (
                         <ul>
-                            {movieList.map((movie) => (
-                                <MovieCard key={movie.id} movie={movie} />
-                            ))}
+                            {filteredMovies.map(movie => <MovieCard key={movie.id} movie={movie} />)}
                         </ul>
-                    )}
+                        )
+                    }
                 </section>
             </div>
         </div>
